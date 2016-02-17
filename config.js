@@ -9,7 +9,9 @@ var config = {
 		"Status": "",
 		"CallRecording": "",
 		"CallType":"",
+		"CallId":""
 	},
+	"calllimit" : 3,
 	"redis_url": "redis://127.0.0.1:6379/1"
 };
 

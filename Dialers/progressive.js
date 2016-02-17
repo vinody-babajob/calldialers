@@ -1,4 +1,5 @@
-var uuid = require('uuid');
+var uuid = require('uuid'),
+	config = require('../config');
 
 
 var ProgressiveDialer = function (telephonyClient, dataAccessor) {
@@ -64,8 +65,6 @@ ProgressiveDialer.prototype.actionBaseOnCallStatus = function (callid, connected
 	var that = this;
 	this.getCustomerForCall(callid, function(customerNumber){
 		that.getAgentForCustomer(customerNumber, function(agentNumber) {
-			console.log("connected");
-			console.log(connected);
 			if (connected) {
 				callback(agentNumber);
 			} else {
@@ -76,9 +75,7 @@ ProgressiveDialer.prototype.actionBaseOnCallStatus = function (callid, connected
 
 
 					that.dataAccessor.get(that.callCountPrefix + customerNumber, function (val) {
-						if (val && val < 3) {
-							console.log("callc");
-							console.log(val);
+						if (val && val < config["calllimit"]) {
 							that.dataAccessor.incr(that.callCountPrefix + customerNumber);
 							that.dataAccessor.pushBottom(that.agentQueuePrefix + agentId, customerNumber);
 						};
