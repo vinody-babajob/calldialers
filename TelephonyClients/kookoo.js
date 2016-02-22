@@ -1,4 +1,4 @@
-var networkUtils = require('../networkUtils');
+var networkUtils = require('../networkutils');
 var config = require('../config');
 
 var kookoo = (function () {

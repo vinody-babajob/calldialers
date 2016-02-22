@@ -2,7 +2,7 @@ var redisAccessor = require('../DataAccessors/redis');
 var exotelTelephonyClient = require('../TelephonyClients/exotel');
 var kookooTelephonyClient = require('../TelephonyClients/kookoo');
 var telephonyClientStatusPrefix = "telephony_client_status_";
-var networkUtils = require('../networkUtils');
+var networkUtils = require('../networkutils');
 
 var clients = [exotelTelephonyClient, kookooTelephonyClient];
 
