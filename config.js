@@ -1,7 +1,5 @@
- 
-
 var config = {
-	"callbackurl" : "http://localhost/",
+	"baseurl" : "http://2422b0e4.ngrok.io/",
 	"normalizedCallInfoFormat" : {
 		"Id":"",
 		"From": "",

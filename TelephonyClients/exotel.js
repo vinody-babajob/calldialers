@@ -3,6 +3,8 @@ var config = require('../config');
 
 var exotel = (function () {
 	return {
+		key: "exotel",
+		statusurl: "http://my.exotel.in/",
 		call : function (callInfo) {
 			var fromnumber = callInfo.from;
 			var tonumber = callInfo.to;
@@ -17,7 +19,7 @@ var exotel = (function () {
 				"CallType": "trans",
 				"Url":"http://my.exotel.in/exoml/start/68135",
 				"CustomField":callid,
-				"StatusCallback": "http://3eaa0952.ngrok.io/callback?callid=" + callid
+				"StatusCallback": config.baseurl + "callback?callid=" + callid
 			};
 
 			networkUtils.post(url, data, function (chunck) {

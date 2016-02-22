@@ -2,14 +2,31 @@ var uuid = require('uuid'),
 	config = require('../config');
 
 
-var ProgressiveDialer = function (telephonyClient, dataAccessor) {
-	this.telephonyClient = telephonyClient;
+var ProgressiveDialer = function (telephonyClients, dataAccessor) {
+	this.telephonyClients = telephonyClients;
 	this.dataAccessor = dataAccessor;
 	this.agentQueuePrefix = "agent_queue_";
 	this.customerKeyPrefix = "customer_agent_";
 	this.callIdPrefix = "call_id_";
 	this.agentContactPrefix = "agent_number_id_";
 	this.callCountPrefix = "call_count_prefix_";
+	this.telephonyClientStatusPrefix = "telephony_client_status_";
+};
+
+
+ProgressiveDialer.prototype.getActiveTelephonyClient = function (callback) {
+	var that = this;
+	for (var i = 0; i < that.telephonyClients.length; ++i) {
+		var key = that.telephonyClients[i].key;
+		that.dataAccessor.get(that.telephonyClientStatusPrefix + key, (function(idx){
+			return function (val) {
+				if (val != null & val == "true") {
+					console.log("inside calling");
+					callback(idx);
+				}
+			}
+		})(i));
+	}
 };
 
 ProgressiveDialer.prototype.queueCalls = function (agentId, agentNumber, customerNumbers) {
@@ -21,7 +38,9 @@ ProgressiveDialer.prototype.queueCalls = function (agentId, agentNumber, custome
 		this.dataAccessor.set(this.callCountPrefix + customerNumber, 0);
 	}
 
-	this.dataAccessor.set(this.agentContactPrefix + agentNumber, agentId);
+	var s = this.agentContactPrefix + agentNumber;
+
+	this.dataAccessor.set(s, agentId);
 
 };
 
@@ -33,14 +52,23 @@ ProgressiveDialer.prototype.next = function (agentId) {
 			if (firstNumber) {
 				that.getAgentForCustomer(firstNumber, function (to) {
 					var callid = uuid.v1();
+					var called = false;
 
 					that.dataAccessor.set(that.callIdPrefix + callid, firstNumber);
 
-					that.telephonyClient.call({
-						from : firstNumber,
-						to : to,
-						callid : callid
+					that.getActiveTelephonyClient(function(idx) {
+						if (!called) {
+							called = true;
+							console.log("calling client " + that.telephonyClients[idx].key);
+							that.telephonyClients[idx].call({
+								from : firstNumber,
+								to : to,
+								callid : callid
+							});
+						}
 					});
+
+					
 				})
 				
 			}
@@ -71,7 +99,11 @@ ProgressiveDialer.prototype.actionBaseOnCallStatus = function (callid, connected
 				that.dataAccessor.pushBottom("agent_finishedcall_queue", 
 					{"agent": {"number":agentNumber}, "cnumber": customerNumber, "connected" : false});
 
-				that.dataAccessor.get(that.agentContactPrefix + agentNumber, function (agentId) {
+				var s = that.agentContactPrefix + agentNumber;
+
+				console.log(s);
+
+				that.dataAccessor.get(s, function (agentId) {
 
 
 					that.dataAccessor.get(that.callCountPrefix + customerNumber, function (val) {

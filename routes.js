@@ -2,12 +2,17 @@
 var express = require('express');
 var router = express.Router();
 var redisAccessor = require('./DataAccessors/redis');
+
 var exotelTelephonyClient = require('./TelephonyClients/exotel');
+var kookooTelephonyClient = require('./TelephonyClients/kookoo');
+
 var ProgressiveDialer = require('./Dialers/progressive');
 var multer  = require('multer');
 var upload = multer({ dest: 'uploads/' });
 
-var exotelProgressiveDialer = new ProgressiveDialer(exotelTelephonyClient, redisAccessor);
+var clients = [exotelTelephonyClient];//[exotelTelephonyClient, kookooTelephonyClient];
+
+var progressiveDialer = new ProgressiveDialer(clients, redisAccessor);
 
 
 // define the home page route
@@ -17,7 +22,7 @@ router.get('/', function(req, res) {
 
 router.post('/queuecalls', function(req, res) {
 	var queInfo = req.body;
-	exotelProgressiveDialer.queueCalls(queInfo["agentId"], queInfo["agentNumber"], queInfo["customerNumbers"]);
+	progressiveDialer.queueCalls(queInfo["agentId"], queInfo["agentNumber"], queInfo["customerNumbers"]);
 	res.send("success");
 });
 
@@ -40,7 +45,7 @@ router.post('/callback', upload.array(), function(req, res) {
 		
 	}
 
-	exotelProgressiveDialer.actionBaseOnCallStatus(telephonyData["CallId"], connected, function (val) {
+	progressiveDialer.actionBaseOnCallStatus(telephonyData["CallId"], connected, function (val) {
 		if (val != null) {
 
 		}
@@ -51,7 +56,7 @@ router.post('/callback', upload.array(), function(req, res) {
 
 router.get('/agentnumber', function(req, res) {
 	var telephonyData = exotelTelephonyClient.normalizeData(req.query);
-	exotelProgressiveDialer.getAgentForCustomer(telephonyData["From"], function(val) {
+	progressiveDialer.getAgentForCustomer(telephonyData["From"], function(val) {
 		if (val != null) {
 			res.send(val);
 		} else {
@@ -64,7 +69,7 @@ router.get('/agentnumber', function(req, res) {
 router.post('/callnext', function(req, res) {
 	var agentInfo = req.body;
 	var agentId = agentInfo["agentId"];
-	exotelProgressiveDialer.next(agentId);
+	progressiveDialer.next(agentId);
 	res.send("success");
 });
 
