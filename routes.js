@@ -10,6 +10,11 @@ var ProgressiveDialer = require('./Dialers/progressive');
 var multer  = require('multer');
 var upload = multer({ dest: 'uploads/' });
 
+var telephonyClients = {
+	"exotel" : exotelTelephonyClient,
+	"kookoo" : kookooTelephonyClient
+};
+
 var clients = [exotelTelephonyClient];//[exotelTelephonyClient, kookooTelephonyClient];
 
 var progressiveDialer = new ProgressiveDialer(clients, redisAccessor);
@@ -22,54 +27,75 @@ router.get('/', function(req, res) {
 
 router.post('/queuecalls', function(req, res) {
 	var queInfo = req.body;
-	progressiveDialer.queueCalls(queInfo["agentId"], queInfo["agentNumber"], queInfo["customerNumbers"]);
+	progressiveDialer.queueCalls(queInfo["caller"], queInfo["receivers"]);
 	res.send("success");
 });
 
-router.post('/callback', upload.array(), function(req, res) {
-	var data = {};
+router.get('/nextnumbertocall', function(req, res) {
+	var telephonyClient = telephonyClients[query["telephonyprovider"]];
+	var callData = telephonyClient.normalizeData(query);
 
-	for (var key in req.query) {
-		data[key] = req.query[key];
-	}
-
-	for (var key in req.body) {
-		data[key] = req.body[key];
-	}
-	
-	var telephonyData = exotelTelephonyClient.normalizeData(data);
-	var connected = true;
-
-	if (telephonyData["Status"] != "completed") {
-		connected  = false;
-		
-	}
-
-	progressiveDialer.actionBaseOnCallStatus(telephonyData["CallId"], connected, function (val) {
-		if (val != null) {
-
-		}
- 	});
-
- 	res.send("success");
-});
-
-router.get('/agentnumber', function(req, res) {
-	var telephonyData = exotelTelephonyClient.normalizeData(req.query);
-	progressiveDialer.getAgentForCustomer(telephonyData["From"], function(val) {
-		if (val != null) {
-			res.send(val);
-		} else {
-			res.send(-1);
-		}
-		
+	progressiveDialer.nextNumberToCall(function (nextnumber) {
+		res.send(nextnumber);
 	});
 });
 
-router.post('/callnext', function(req, res) {
-	var agentInfo = req.body;
-	var agentId = agentInfo["agentId"];
-	progressiveDialer.next(agentId);
+router.get('/canmakenextcall', function(req, res) {
+	var query = req.query;
+
+	var telephonyClient = telephonyClients[query["telephonyprovider"]];
+	var callData = telephonyClient.normalizeData(query);
+
+	var connected = false;
+
+	if (callData["ReceiverStatus"] == "completed") {
+		connected = true;
+	}
+
+	progressiveDialer.updateCallStatus(
+		callData["Caller"],
+		callData["Receiver"],
+		connected,
+		function (updatestatus) {
+
+		}
+	);
+
+	ProgressiveDialer.canCallerMakeCall(
+		callData["Caller"],
+		function (canmakecalls) {
+			res.send(canmakecalls);
+		}
+	);
+
+});
+
+router.post('/callback', upload.array(), function(req, res) {
+	// var data = {};
+
+	// for (var key in req.query) {
+	// 	data[key] = req.query[key];
+	// }
+
+	// for (var key in req.body) {
+	// 	data[key] = req.body[key];
+	// }
+});
+
+router.post('/pausecall', function(req, res) {
+	var callInfo = req.body;
+	var caller = agentInfo["caller"];
+	progressiveDialer.pauseCall(caller);
+
+	res.send("success");
+});
+
+
+router.post('/startcall', function(req, res) {
+	var callInfo = req.body;
+	var caller = agentInfo["caller"];
+	progressiveDialer.startCall(caller);
+
 	res.send("success");
 });
 

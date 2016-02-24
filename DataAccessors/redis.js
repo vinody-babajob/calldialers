@@ -33,7 +33,16 @@ var redis = {
 	},
 	incr: function(key) {
 		client.incr(key);
-	}	
+	},
+	llen: function(key, callback) {
+		client.llen(key, function (err, val) {
+			if (!err) {
+				callback(val);
+			} else {
+				callback(null);
+			}
+		});
+	}
 };
 
 module.exports = redis;

@@ -46,22 +46,34 @@ var exotel = (function () {
   // CurrentTime: '2016-02-16 15:56:49' }
 
   			var normalizeData = config["normalizedCallInfoFormat"];
-  			normalizeData["From"] = data.CallFrom;
-  			normalizeData["To"] = data.CallTo;
-  			normalizeData["Id"] = data.CallSid;
-  			normalizeData["CallId"] = data.callid;
+        var callerStatus = "";
+        var receiverStatus = "";
+  			
+        normalizeData["Caller"] = data.CallFrom;
+  			normalizeData["Cid"] = data.CallSid;
+
+        if (data.DialWhomNumber) {
+          normalizeData["Receiver"] = data.DialWhomNumber;
+        }
+
+        if (data.CallType) {
+          callerStatus = data.CallType;
+        }
 
   			if (data.CallStatus) {
-  				normalizeData["Status"] = data.CallStatus;
+          callerStatus = data.CallStatus;
   			}
 
-  			if (data.Status) {
-  				normalizeData["Status"] = data.Status;
-  			}
+        if (data.DialCallStatus) {
+          receiverStatus = data.DialCallStatus;
+        }
 
-  			if (data.CallType) {
-  				normalizeData["CallType"] = data.CallType;
-  			}
+        if (receiverStatus != "completed") {
+          receiverStatus = "incomplete";
+        }
+
+        normalizeData["ReceiverStatus"] = receiverStatus;
+        normalizeData["CallerStatus"] = callerStatus;
 
   			return normalizeData;
 
