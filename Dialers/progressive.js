@@ -32,7 +32,7 @@ ProgressiveDialer.prototype.queueCalls = function (callerNumber, receiverNumbers
 
 	for (var i = 0; i < receiverNumbers.length; ++i) {
 		var recevier = receiverNumbers[i];
-		that.dataAccessor.pushBottom(that.callerQueuePrefix + callerNumber, toNumbers[i]);
+		that.dataAccessor.pushBottom(that.callerQueuePrefix + callerNumber, receiverNumbers[i]);
 		that.dataAccessor.set(that.receiverKeyPrefix + recevier, callerNumber);
 		that.dataAccessor.set(that.recevierCallCountPrefix + recevier, 0);
 	}
