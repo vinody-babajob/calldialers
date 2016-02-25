@@ -32,12 +32,19 @@ router.post('/queuecalls', function(req, res) {
 });
 
 router.get('/nextnumbertocall', function(req, res) {
+	var query = req.query;
+
 	var telephonyClient = telephonyClients[query["telephonyprovider"]];
+	console.log(telephonyClient);
+	console.log(query["telephonyprovider"]);
 	var callData = telephonyClient.normalizeData(query);
 
-	progressiveDialer.nextNumberToCall(function (nextnumber) {
+	progressiveDialer.nextNumberToCall(
+		callData["Caller"],
+		function (nextnumber) {
 		res.send(nextnumber);
-	});
+		}
+	);
 });
 
 router.get('/canmakenextcall', function(req, res) {
@@ -57,14 +64,27 @@ router.get('/canmakenextcall', function(req, res) {
 		callData["Receiver"],
 		connected,
 		function (updatestatus) {
-
+			console.log("updatestatus");
+			console.log(updatestatus);
 		}
 	);
 
-	ProgressiveDialer.canCallerMakeCall(
+	progressiveDialer.canCallerMakeCall(
 		callData["Caller"],
 		function (canmakecalls) {
-			res.send(canmakecalls);
+			var result = "false"
+			if (canmakecalls)
+				result = "true";
+
+			if (query["telephonyprovider"] == "exotel") {
+				res.setHeader('Content-Type', 'application/json');
+				var json = JSON.stringify({
+					select: result
+				});
+				res.send(json);
+			} else {
+				res.send(result);
+			}
 		}
 	);
 
@@ -84,7 +104,7 @@ router.post('/callback', upload.array(), function(req, res) {
 
 router.post('/pausecall', function(req, res) {
 	var callInfo = req.body;
-	var caller = agentInfo["caller"];
+	var caller = callInfo["caller"];
 	progressiveDialer.pauseCall(caller);
 
 	res.send("success");
@@ -93,7 +113,7 @@ router.post('/pausecall', function(req, res) {
 
 router.post('/startcall', function(req, res) {
 	var callInfo = req.body;
-	var caller = agentInfo["caller"];
+	var caller = callInfo["caller"];
 	progressiveDialer.startCall(caller);
 
 	res.send("success");

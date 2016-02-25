@@ -107,7 +107,7 @@ ProgressiveDialer.prototype.startCall = function (callerNumber) {
 	that.getActiveTelephonyClient(function(idx) {
 		that.telephonyClients[idx].call({
 			from : callerNumber,
-			to : to,
+			to: "",
 			callid : callid
 		});
 	});
