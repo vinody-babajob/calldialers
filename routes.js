@@ -35,7 +35,6 @@ router.get('/nextnumbertocall', function(req, res) {
 	var query = req.query;
 
 	var telephonyClient = telephonyClients[query["telephonyprovider"]];
-	console.log(telephonyClient);
 	console.log(query["telephonyprovider"]);
 	var callData = telephonyClient.normalizeData(query);
 
