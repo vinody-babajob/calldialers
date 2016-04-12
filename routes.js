@@ -33,6 +33,15 @@ router.post('/queuecalls', function(req, res) {
 
 router.get('/nextnumbertocall', function(req, res) {
 	var query = req.query;
+	
+	if (query["numbers"])
+	{
+		console.log("-----Useless Callback Start-----");
+		console.log(query["numbers"])
+		console.log("-----Useless Callback END-----")
+		res.send("");
+		return;
+	}
 
 	var telephonyClient = telephonyClients[query["telephonyprovider"]];
 	console.log(query["telephonyprovider"]);
