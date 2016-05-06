@@ -42,6 +42,9 @@ var redis = {
 				callback(null);
 			}
 		});
+	},
+	del: function(key) {
+		client.del(key);
 	}
 };
 
